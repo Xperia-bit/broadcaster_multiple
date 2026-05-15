@@ -68,98 +68,136 @@ static const struct bt_data ad_short[] = {
 
 static struct bt_le_ext_adv *adv[CONFIG_BT_EXT_ADV_MAX_ADV_SET];
 
+// int broadcaster_multiple(void)
+// {
+// 	int err;
+
+// 	/* Create and start Advertising Sets */
+// 	// for (int index = 0; index < CONFIG_BT_EXT_ADV_MAX_ADV_SET; index++) {
+// 	for (int index = 0; index < 1; index++) {
+// 		struct bt_le_adv_param adv_param = {
+// 			.id = BT_ID_DEFAULT,
+// 			.sid = 0U, /* Supply unique SID when creating advertising set */
+// 			.secondary_max_skip = 0U,
+// 			.options = BT_LE_ADV_OPT_EXT_ADV,
+// 			.interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
+// 			.interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
+// 			.peer = NULL,
+// 		};
+// 		const struct adv_param_config {
+// 			uint32_t options;
+// 			const struct bt_data *ad;
+// 			size_t ad_size;
+// 		} param_config[] = {
+// 		{ /* Use 1M legacy PDU */
+// 			.options = BT_LE_ADV_OPT_NONE,
+// 			.ad = ad_short,
+// 			.ad_size = ARRAY_SIZE(ad_short),
+// 		},
+// 		{ /* Use 2M auxiliary PDU */
+// 			.options = BT_LE_ADV_OPT_EXT_ADV,
+// 			.ad = ad_long,
+// 			.ad_size = ARRAY_SIZE(ad_long),
+// 		},
+// 		{ /* Use 1M auxiliary PDU */
+// 			.options = BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_NO_2M,
+// 			.ad = ad_long,
+// 			.ad_size = ARRAY_SIZE(ad_long),
+// 		},
+// 		{ /* Use Coded PHY */
+// 			.options = BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_CODED,
+// 			.ad = ad_long,
+// 			.ad_size = ARRAY_SIZE(ad_long),
+// 		}};
+// 		const struct bt_data *ad;
+// 		size_t ad_size;
+
+// 		/* Use advertising set instance index as SID */
+// 		adv_param.sid = index;
+
+// 		/* Advertising set options, AD and AD array size */
+// 		const struct adv_param_config *config =
+// 			&param_config[index % ARRAY_SIZE(param_config)];
+
+// 		adv_param.options = config->options;
+// 		ad = config->ad;
+// 		ad_size = config->ad_size;
+
+// ext_adv_create_retry:
+// 		/* Create a non-connectable advertising set */
+// 		err = bt_le_ext_adv_create(&adv_param, NULL, &adv[index]);
+// 		if (err) {
+// 			/* Failed creating Coded PHY advertising set? */
+// 			if ((adv_param.options & BT_LE_ADV_OPT_CODED) != 0U) {
+// 				printk("Failed to create advertising set %d with Coded PHY "
+// 				       "(err %d), retry without...\n", index, err);
+
+// 				/* Retry with non-Coded PHY advertising set */
+// 				adv_param.options &= ~BT_LE_ADV_OPT_CODED;
+
+// 				goto ext_adv_create_retry;
+// 			}
+
+// 			printk("Failed to create advertising set %d (err %d)\n", index, err);
+// 			return err;
+// 		}
+
+// 		/* Set extended advertising data */
+// 		err = bt_le_ext_adv_set_data(adv[index], ad, ad_size, NULL, 0);
+// 		if (err) {
+// 			printk("Failed to set advertising data for set %d "
+// 			       "(err %d)\n", index, err);
+// 			return err;
+// 		}
+
+// 		/* Start extended advertising set */
+// 		err = bt_le_ext_adv_start(adv[index],
+// 					  BT_LE_EXT_ADV_START_DEFAULT);
+// 		if (err) {
+// 			printk("Failed to start extended advertising set %d "
+// 			       "(err %d)\n", index, err);
+// 			return err;
+// 		}
+
+// 		printk("Started Extended Advertising Set %d.\n", index);
+// 	}
+
+// 	return 0;
+// }
+
 int broadcaster_multiple(void)
 {
-	int err;
-
-	/* Create and start Advertising Sets */
-	for (int index = 0; index < CONFIG_BT_EXT_ADV_MAX_ADV_SET; index++) {
-		struct bt_le_adv_param adv_param = {
-			.id = BT_ID_DEFAULT,
-			.sid = 0U, /* Supply unique SID when creating advertising set */
-			.secondary_max_skip = 0U,
-			.options = BT_LE_ADV_OPT_EXT_ADV,
-			.interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
-			.interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
-			.peer = NULL,
-		};
-		const struct adv_param_config {
-			uint32_t options;
-			const struct bt_data *ad;
-			size_t ad_size;
-		} param_config[] = {
-		{ /* Use 1M legacy PDU */
-			.options = BT_LE_ADV_OPT_NONE,
-			.ad = ad_short,
-			.ad_size = ARRAY_SIZE(ad_short),
-		},
-		{ /* Use 2M auxiliary PDU */
-			.options = BT_LE_ADV_OPT_EXT_ADV,
-			.ad = ad_long,
-			.ad_size = ARRAY_SIZE(ad_long),
-		},
-		{ /* Use 1M auxiliary PDU */
-			.options = BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_NO_2M,
-			.ad = ad_long,
-			.ad_size = ARRAY_SIZE(ad_long),
-		},
-		{ /* Use Coded PHY */
-			.options = BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_CODED,
-			.ad = ad_long,
-			.ad_size = ARRAY_SIZE(ad_long),
-		}};
-		const struct bt_data *ad;
-		size_t ad_size;
-
-		/* Use advertising set instance index as SID */
-		adv_param.sid = index;
-
-		/* Advertising set options, AD and AD array size */
-		const struct adv_param_config *config =
-			&param_config[index % ARRAY_SIZE(param_config)];
-
-		adv_param.options = config->options;
-		ad = config->ad;
-		ad_size = config->ad_size;
-
-ext_adv_create_retry:
-		/* Create a non-connectable advertising set */
-		err = bt_le_ext_adv_create(&adv_param, NULL, &adv[index]);
-		if (err) {
-			/* Failed creating Coded PHY advertising set? */
-			if ((adv_param.options & BT_LE_ADV_OPT_CODED) != 0U) {
-				printk("Failed to create advertising set %d with Coded PHY "
-				       "(err %d), retry without...\n", index, err);
-
-				/* Retry with non-Coded PHY advertising set */
-				adv_param.options &= ~BT_LE_ADV_OPT_CODED;
-
-				goto ext_adv_create_retry;
-			}
-
-			printk("Failed to create advertising set %d (err %d)\n", index, err);
-			return err;
-		}
-
-		/* Set extended advertising data */
-		err = bt_le_ext_adv_set_data(adv[index], ad, ad_size, NULL, 0);
-		if (err) {
-			printk("Failed to set advertising data for set %d "
-			       "(err %d)\n", index, err);
-			return err;
-		}
-
-		/* Start extended advertising set */
-		err = bt_le_ext_adv_start(adv[index],
-					  BT_LE_EXT_ADV_START_DEFAULT);
-		if (err) {
-			printk("Failed to start extended advertising set %d "
-			       "(err %d)\n", index, err);
-			return err;
-		}
-
-		printk("Started Extended Advertising Set %d.\n", index);
-	}
-
-	return 0;
+    int err;
+    
+    struct bt_le_adv_param adv_param = {
+        .id = BT_ID_DEFAULT,
+        .sid = 0,
+        .options = BT_LE_ADV_OPT_NONE,  // 经典广播
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
+        .interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
+    };
+    
+    /* 创建广播集 */
+    err = bt_le_ext_adv_create(&adv_param, NULL, &adv[0]);
+    if (err) {
+        printk("Failed to create advertising set (err %d)\n", err);
+        return err;
+    }
+    
+    /* 设置广播数据 */
+    err = bt_le_ext_adv_set_data(adv[0], ad_short, ARRAY_SIZE(ad_short), NULL, 0);
+    if (err) {
+        printk("Failed to set advertising data (err %d)\n", err);
+        return err;
+    }
+    
+    /* 开始广播 */
+    err = bt_le_ext_adv_start(adv[0], BT_LE_EXT_ADV_START_DEFAULT);
+    if (err) {
+        printk("Failed to start advertising (err %d)\n", err);
+        return err;
+    }
+    
+    printk("Started LEGACY Advertising Set\n");
+    return 0;
 }
