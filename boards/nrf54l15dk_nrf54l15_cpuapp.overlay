@@ -1,0 +1,137 @@
+&led0 {
+    status = "disabled";
+};
+
+&led1 {
+    status = "disabled";
+};
+
+&led2 {
+    status = "disabled";
+};
+
+&led3 {
+    status = "disabled";
+};
+
+&button0 {
+    status = "disabled";
+};
+
+&button1 {
+    status = "disabled";
+};
+
+&button2 {
+    status = "disabled";
+};
+
+&button3 {
+    status = "disabled";
+};
+
+&uart30 {
+    status = "disabled";
+};
+
+&spi30 {
+    status = "disabled";
+};
+
+// / {
+//     /* 1. 自定义输出引脚节点 */
+//     gpio_enable: gpio-enable {
+//         compatible = "gpio-leds";
+
+//         sensorable: sensor_enable {
+//             gpios = <&gpio1 5 GPIO_ACTIVE_HIGH>;
+//             label = "Sensor Enable";
+//         };
+//     };
+//     keys: keys {
+// 		compatible = "gpio-keys";
+
+// 		pwrkey: pwrkey {
+// 			gpios = <&gpio0 0 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+// 			zephyr,code = <INPUT_KEY_ENTER>;
+//             label = "PWR KEY";
+// 		};
+// 	};
+//     /* 2. 别名 */
+//     aliases {
+//         pwrkey = &pwrkey;
+//         sensorsw = &sensorable;
+// 		bmp581 = &bmp581;
+// 		lsm6dso = &lsm6dso;
+//     };
+// };
+
+// /*           I2C           */
+// &i2c22 {
+//     status = "okay";
+//     pinctrl-0 = <&i2c22_default>;
+//     pinctrl-1 = <&i2c22_sleep>;
+//     pinctrl-names = "default", "sleep";
+
+//     bmp581: bmp581@46 {
+//         compatible = "bosch,bmp581";
+//         reg = <0x46>;
+//         status = "okay";
+//         zephyr,deferred-init;
+//     };
+
+//     lsm6dso: lsm6dso@6a {
+//         compatible = "st,lsm6dso";
+//         reg = <0x6a>;
+//         status = "okay";
+//         zephyr,deferred-init;
+//     };
+// };
+
+// &pinctrl {
+//     i2c22_default: i2c22_default {
+//         group1 {
+//             psels = <NRF_PSEL(TWIM_SCL, 1, 12)>,
+//                     <NRF_PSEL(TWIM_SDA, 1, 13)>;
+//         };
+//     };
+
+//     i2c22_sleep: i2c22_sleep {
+//         group1 {
+//             psels = <NRF_PSEL(TWIM_SCL, 1, 12)>,
+//                     <NRF_PSEL(TWIM_SDA, 1, 13)>;
+//             low-power-enable;
+//         };
+//     };
+// };
+
+/*           UART           */
+&pinctrl {
+
+    uart21_default: uart21_default {
+        group1 {
+            psels = <NRF_PSEL(UART_TX, 1, 10)>;
+        };
+        group2 {
+            psels = <NRF_PSEL(UART_RX, 1, 11)>;
+            bias-pull-up;
+        };
+    };
+    uart21_sleep: uart21_sleep {
+        group1 {
+            psels = <NRF_PSEL(UART_TX, 1, 10)>,
+                    <NRF_PSEL(UART_RX, 1, 11)>;
+            low-power-enable;
+        };
+    };
+};
+
+&uart21 {
+    // compatible = "nordic,nrf-uarte";
+    status = "okay";
+    current-speed = <115200>;
+    pinctrl-0 = <&uart21_default>;
+    pinctrl-1 = <&uart21_sleep>;
+    pinctrl-names = "default", "sleep";
+};
+

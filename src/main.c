@@ -6,24 +6,27 @@
 
 #include <zephyr/sys/printk.h>
 #include <zephyr/bluetooth/bluetooth.h>
+#include "print.h"
 
 int broadcaster_multiple(void);
 
 int main(void)
 {
+	df_print_init();
 	int err;
+	k_msleep(4000);
 
-	printk("Starting Multiple Broadcaster Demo\n");
+	df_print("Starting Multiple Broadcaster Demo\n");
 
 	/* Initialize the Bluetooth Subsystem */
 	err = bt_enable(NULL);
 	if (err) {
-		printk("Bluetooth init failed (err %d)\n", err);
+		df_print("Bluetooth init failed (err %d)\n", err);
 		return 0;
 	}
 
 	(void)broadcaster_multiple();
 
-	printk("Exiting %s thread.\n", __func__);
+	df_print("Exiting %s thread.\n", __func__);
 	return 0;
 }

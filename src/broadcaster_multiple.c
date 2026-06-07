@@ -9,6 +9,8 @@
 #include <zephyr/bluetooth/hci_vs.h>
 #include <zephyr/bluetooth/uuid.h>
 
+#include "print.h"
+
 BUILD_ASSERT(IS_ENABLED(CONFIG_BT_HAS_HCI_VS),
 	     "This application requires Zephyr HCI vendor extensions");
 
@@ -18,16 +20,19 @@ BUILD_ASSERT(IS_ENABLED(CONFIG_BT_HAS_HCI_VS),
 #define CONFIG_ADV_INTERVAL_MS_MIN      100U
 #define CONFIG_ADV_INTERVAL_MS_MAX      150U
 
-#define BEACON_NAME                     "Nordic Beacon"
+#define BEACON_NAME                     "Beacon Test"
 #define BEACON_MFG_COMPANY_ID           0xFFFF
 #define BEACON_MFG_FRAME_TYPE           0x01
 
+// 服务UUID
 #define BEACON_CFG_SERVICE_UUID_BYTES   \
 	0xF0, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12, \
 	0x78, 0x56, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12
+// 特征值UUID  
 #define BEACON_CFG_INTERVAL_UUID_BYTES  \
 	0xF1, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12, \
 	0x78, 0x56, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12
+// 广播间隔UUID
 #define BEACON_CFG_TX_POWER_UUID_BYTES  \
 	0xF2, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12, \
 	0x78, 0x56, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12
@@ -183,13 +188,13 @@ static int beacon_adv_apply(struct beacon_runtime_cfg *new_cfg)
 
 	err = bt_le_ext_adv_stop(beacon_adv);
 	if (err) {
-		printk("Failed to stop beacon advertising (err %d)\n", err);
+		df_print("Failed to stop beacon advertising (err %d)\n", err);
 		return err;
 	}
 
 	err = bt_le_ext_adv_update_param(beacon_adv, &param);
 	if (err) {
-		printk("Failed to update beacon advertising param (err %d)\n", err);
+		df_print("Failed to update beacon advertising param (err %d)\n", err);
 		return err;
 	}
 
@@ -198,20 +203,20 @@ static int beacon_adv_apply(struct beacon_runtime_cfg *new_cfg)
 
 	err = bt_le_ext_adv_set_data(beacon_adv, beacon_ad, ARRAY_SIZE(beacon_ad), NULL, 0);
 	if (err) {
-		printk("Failed to update beacon advertising data (err %d)\n", err);
+		df_print("Failed to update beacon advertising data (err %d)\n", err);
 		return err;
 	}
 
 	err = bt_le_ext_adv_start(beacon_adv, BT_LE_EXT_ADV_START_DEFAULT);
 	if (err) {
-		printk("Failed to restart beacon advertising (err %d)\n", err);
+		df_print("Failed to restart beacon advertising (err %d)\n", err);
 		return err;
 	}
 
 	applied_tx_power = beacon_cfg.tx_power_dbm;
 	err = adv_tx_power_set(beacon_adv, &applied_tx_power);
 	if (err) {
-		printk("Failed to apply beacon TX power (err %d)\n", err);
+		df_print("Failed to apply beacon TX power (err %d)\n", err);
 		return err;
 	}
 
@@ -220,11 +225,11 @@ static int beacon_adv_apply(struct beacon_runtime_cfg *new_cfg)
 
 	err = bt_le_ext_adv_set_data(beacon_adv, beacon_ad, ARRAY_SIZE(beacon_ad), NULL, 0);
 	if (err) {
-		printk("Failed to refresh beacon payload (err %d)\n", err);
+		df_print("Failed to refresh beacon payload (err %d)\n", err);
 		return err;
 	}
 
-	printk("Beacon updated: interval=%u ms, tx_power=%d dBm\n",
+	df_print("Beacon updated: interval=%u ms, tx_power=%d dBm\n",
 	       beacon_cfg.interval_ms, beacon_cfg.tx_power_dbm);
 
 	return 0;
@@ -240,7 +245,7 @@ static int config_adv_start(void)
 
 	err = bt_le_ext_adv_start(config_adv, BT_LE_EXT_ADV_START_DEFAULT);
 	if ((err != 0) && (err != -EALREADY)) {
-		printk("Failed to start config advertising (err %d)\n", err);
+		df_print("Failed to start config advertising (err %d)\n", err);
 		return err;
 	}
 
@@ -257,7 +262,7 @@ static void config_adv_restart_work_handler(struct k_work *work)
 static void config_adv_connected_cb(struct bt_le_ext_adv *adv,
 				       struct bt_le_ext_adv_connected_info *info)
 {
-	printk("Config advertiser[%u] connected, conn %p\n",
+	df_print("Config advertiser[%u] connected, conn %p\n",
 	       bt_le_ext_adv_get_index(adv), info->conn);
 }
 
@@ -270,7 +275,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	char addr[BT_ADDR_LE_STR_LEN];
 
 	if (err) {
-		printk("Connection failed, err 0x%02x %s\n", err, bt_hci_err_to_str(err));
+		df_print("Connection failed, err 0x%02x %s\n", err, bt_hci_err_to_str(err));
 		return;
 	}
 
@@ -280,7 +285,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 		config_conn = bt_conn_ref(conn);
 	}
 
-	printk("Phone connected: %s\n", addr);
+	df_print("Phone connected: %s\n", addr);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
@@ -288,7 +293,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	char addr[BT_ADDR_LE_STR_LEN];
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-	printk("Phone disconnected: %s, reason 0x%02x %s\n",
+	df_print("Phone disconnected: %s, reason 0x%02x %s\n",
 	       addr, reason, bt_hci_err_to_str(reason));
 
 	if (config_conn != NULL) {
@@ -320,6 +325,7 @@ static ssize_t write_interval_ms(struct bt_conn *conn,
 {
 	struct beacon_runtime_cfg new_cfg;
 	uint16_t new_interval_ms;
+	uint16_t old_interval_ms = beacon_cfg.interval_ms;
 	int err;
 
 	ARG_UNUSED(conn);
@@ -339,6 +345,9 @@ static ssize_t write_interval_ms(struct bt_conn *conn,
 		return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
 	}
 
+	df_print("Beacon interval write request: old=%u ms, new=%u ms\n",
+	 old_interval_ms, new_interval_ms);
+
 	new_cfg = beacon_cfg;
 	new_cfg.interval_ms = new_interval_ms;
 
@@ -346,6 +355,7 @@ static ssize_t write_interval_ms(struct bt_conn *conn,
 	if (err) {
 		return BT_GATT_ERR(BT_ATT_ERR_UNLIKELY);
 	}
+
 
 	return len;
 }
@@ -409,7 +419,7 @@ static int beacon_adv_create(void)
 
 	err = bt_le_ext_adv_create(&param, NULL, &beacon_adv);
 	if (err) {
-		printk("Failed to create beacon advertising set (err %d)\n", err);
+		df_print("Failed to create beacon advertising set (err %d)\n", err);
 		return err;
 	}
 
@@ -417,13 +427,13 @@ static int beacon_adv_create(void)
 
 	err = bt_le_ext_adv_set_data(beacon_adv, beacon_ad, ARRAY_SIZE(beacon_ad), NULL, 0);
 	if (err) {
-		printk("Failed to set beacon advertising data (err %d)\n", err);
+		df_print("Failed to set beacon advertising data (err %d)\n", err);
 		return err;
 	}
 
 	err = bt_le_ext_adv_start(beacon_adv, BT_LE_EXT_ADV_START_DEFAULT);
 	if (err) {
-		printk("Failed to start beacon advertising (err %d)\n", err);
+		df_print("Failed to start beacon advertising (err %d)\n", err);
 		return err;
 	}
 
@@ -432,7 +442,7 @@ static int beacon_adv_create(void)
 		return err;
 	}
 
-	printk("Beacon advertiser started on handle %u\n", bt_le_ext_adv_get_index(beacon_adv));
+	df_print("Beacon advertiser started on handle %u\n", bt_le_ext_adv_get_index(beacon_adv));
 
 	return 0;
 }
@@ -444,14 +454,14 @@ static int config_adv_create(void)
 
 	err = bt_le_ext_adv_create(&param, &config_adv_cb, &config_adv);
 	if (err) {
-		printk("Failed to create config advertising set (err %d)\n", err);
+		df_print("Failed to create config advertising set (err %d)\n", err);
 		return err;
 	}
 
 	err = bt_le_ext_adv_set_data(config_adv, config_ad, ARRAY_SIZE(config_ad),
 				     config_sd, ARRAY_SIZE(config_sd));
 	if (err) {
-		printk("Failed to set config advertising data (err %d)\n", err);
+		df_print("Failed to set config advertising data (err %d)\n", err);
 		return err;
 	}
 
@@ -460,7 +470,7 @@ static int config_adv_create(void)
 		return err;
 	}
 
-	printk("Config advertiser started on handle %u\n", bt_le_ext_adv_get_index(config_adv));
+	df_print("Config advertiser started on handle %u\n", bt_le_ext_adv_get_index(config_adv));
 
 	return 0;
 }
@@ -479,8 +489,8 @@ int broadcaster_multiple(void)
 		return err;
 	}
 
-	printk("Beacon set: non-connectable, phone config set: connectable\n");
-	printk("Write interval(ms) or tx_power(dBm) through the custom GATT service\n");
+	df_print("Beacon set: non-connectable, phone config set: connectable\n");
+	df_print("Write interval(ms) or tx_power(dBm) through the custom GATT service\n");
 
 	return 0;
 }

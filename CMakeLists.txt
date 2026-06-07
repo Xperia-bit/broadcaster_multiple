@@ -8,3 +8,4 @@ target_sources(app PRIVATE
   src/main.c
   src/broadcaster_multiple.c
 )
+target_sources(app PRIVATE src/print.c)
